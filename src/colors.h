@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+
 struct color
 {
     float r, g, b;
@@ -24,6 +25,12 @@ struct drawableColor makeDrawable(struct color c)
     return dc;
 }
 
+struct color dimColorPercent(struct color c, float d)
+{
+    struct color dimmedColor = {c.r/d, c.g/d, c.b/d};
+    return dimmedColor;
+}
+
 void printcolor(struct color c)
 {
     printf("<");
@@ -33,4 +40,10 @@ void printcolor(struct color c)
     printf(", ");
     printf("%f", c.b);
     printf(">\n");
+}
+
+struct color color(float r, float g, float b)
+{
+    struct color c = {r, g, b};
+    return c;
 }

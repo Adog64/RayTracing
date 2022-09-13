@@ -58,6 +58,12 @@ struct vector3 scalarpv3(struct vector3 v, float x)
     return w;
 }
 
+struct vector3 orthov3(struct vector3 v)
+{
+    struct vector3 w = {-v.y, v.x, 0};
+    return w;
+}
+
 struct vector3 rotatev3(struct vector3 n, struct vector3 v, float t)
 {
     n = normv3(n);
@@ -69,6 +75,11 @@ struct vector3 reflectv3(struct vector3 n, struct vector3 v)
     return subv3(v, scalarpv3(n, 2*dotpv3(v,n)));
 }
 
+struct vector3 vector3(float x, float y, float z)
+{
+    struct vector3 v3 = {x, y, z};
+    return v3;
+}
 
 void printv3(struct vector3 v)
 {
