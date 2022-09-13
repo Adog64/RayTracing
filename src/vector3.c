@@ -60,8 +60,8 @@ struct vector3 scalarpv3(struct vector3 v, float x)
 
 struct vector3 orthov3(struct vector3 v)
 {
-    struct vector3 w = {-v.y, v.x, 0};
-    return w;
+    struct vector3 w[] = {{v.z, v.z, -v.x-v.y}, {-v.y-v.z, v.x, v.x}};
+    return w[(v.z != 0 && -v.x != v.y)];
 }
 
 struct vector3 rotatev3(struct vector3 n, struct vector3 v, float t)

@@ -1,5 +1,6 @@
 #include "vector3.h"
 #include "colors.h"
+#define STBI_ONLY_JPEG
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <stdio.h>
@@ -36,7 +37,7 @@ struct intersection planeIntersection(struct plane p, struct vector3 rayOrigin, 
 struct color planeColorAt(struct plane p, struct vector3 pos);
 
 // get a pixel from the plane texture
-struct color getPixelFromTexture(struct planeTexture t, int x, int y);
+struct color getPixelFromTexture(struct planeTexture t, int x, int y, int aa);
 
 // check if a texture is valid and loaded properly
 bool isValidTexture(struct planeTexture t);
@@ -88,24 +89,35 @@ struct color planeColorAt(struct plane p, struct vector3 pos)
         // some vector in the plane by the plane rotation around plane center
         struct vector3 planeUV1 = rotatev3(p.normal, normv3(orthov3(p.normal)), p.rotation);
         struct vector3 planeUV2 = crosspv3(p.normal, planeUV1);
-
+        
         struct vector3 f = scalarpv3(addv3(p.center, pos), p.scale);
-        int xPos = (((int)(dotpv3(f, planeUV1)*50/p.scale)) % (p.texture.width-1) + (p.texture.width-1)) % (p.texture.width-1);
-        int yPos = (((int)(dotpv3(f, planeUV2)*50/p.scale)) % (p.texture.height-1) + (p.texture.height-1)) % (p.texture.height-1);
-        c = getPixelFromTexture(p.texture, xPos, yPos);
+        int xPos = (((int)(dotpv3(f, planeUV1)*200/p.scale)) % (p.texture.width-1) + (p.texture.width-1)) % (p.texture.width-1);
+        int yPos = (((int)(dotpv3(f, planeUV2)*200/p.scale)) % (p.texture.height-1) + (p.texture.height-1)) % (p.texture.height-1);
+        c = getPixelFromTexture(p.texture, xPos, yPos, 3);
     }
     return c;
 }
 
-struct color getPixelFromTexture(struct planeTexture t, int x, int y)
+struct color getPixelFromTexture(struct planeTexture t, int x, int y, int aa)
 {
-    if (x < t.width && x >= 0 && y < t.height && y >= 0)
-    {
-        const unsigned char *center = t.data + (3 * (y * t.width + x));
-        struct color rgb = {*center, *(center+1), *(center+2)};
-        return rgb;
-    }
+    int colors = 0;
     struct color rgb = {0,0,0};
+    for (int i = x-aa; i < x+aa; i++)
+        for (int j = y-aa; j < y+aa; j++)
+            if (i < t.width && i >= 0 && j < t.height && j >= 0)
+            {
+                const unsigned char *p = t.data + (3 * (j * t.width + i));
+                rgb.r += *p;
+                rgb.g += *(p+1);
+                rgb.b += *(p+2);
+                colors++;
+            }
+    if (colors > 0)
+    {
+        rgb.r /= colors;
+        rgb.g /= colors;
+        rgb.b /= colors;
+    }
     return rgb;
 }
 

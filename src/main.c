@@ -7,8 +7,8 @@
 #include <stdbool.h>
 
 #define SCALE 300
-#define WIDTH 2*SCALE
-#define HEIGHT 2*SCALE
+#define WIDTH 640
+#define HEIGHT 480
 #define BRIGHTNESS 10
 #define FPS 60
 
@@ -45,7 +45,7 @@ int main()
         SDL_RenderPresent(renderer);
 
         frame++;
-        SDL_Delay(1/FPS);
+        // SDL_Delay(1/FPS);
     }
     return 0;
 }
@@ -66,21 +66,22 @@ void clearScreen()
 
 void render(int frame)
 {
-    int numPlanes = 5;
+    int numPlanes = 6;
     struct plane planes[] = {
-        {SCALE, {1,0,0}, {3,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
-        {SCALE, {0,1,0}, {0,3,0}, 0, planeTextureFromFile("assets/wall.jpg")},
-        {SCALE, {0,1,0}, {0,-3,0}, 0, planeTextureFromFile("assets/wall.jpg")},
-        {SCALE, {0,0,1}, {0,0,3}, 0, planeTextureFromFile("assets/ceiling.jpg")},
-        {SCALE, {0,0,1}, {0,0,-3}, 0, planeTextureFromFile("assets/floor.jpg")}
+        {SCALE, {1,0,0}, {10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
+        {SCALE, {1,0,0}, {-10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
+        {SCALE, {0,1,0}, {0,10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
+        {SCALE, {0,1,0}, {0,-10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
+        {SCALE, {0,0,1}, {0,0,5}, PI/4, planeTextureFromFile("assets/ceiling.jpg")},
+        {SCALE, {0,0,1}, {0,0,-3}, PI/4, planeTextureFromFile("assets/floor.jpg")}
     };
 
-    struct vector3 camera = {-1, 0, 0};
-    struct vector3 screenPos = {camera.x+0.5, 0, 0};
+    struct vector3 camera = {0, 0, 0};
+    struct vector3 screenPos = {camera.x+1, 0, 0};
 
     float roll = 0;
-    float pitch = 0*(PI/32);
-    float yaw = 0;
+    float pitch = 0;
+    float yaw = frame*(PI/256);
 
     struct intersection planeIntersections[numPlanes];
     int planeMindex = -1;
@@ -89,10 +90,10 @@ void render(int frame)
 
     for (int i = 0; i < HEIGHT; i++)
     {
-        screenPos.z = ((float)(-i + SCALE))/SCALE;
+        screenPos.z = ((float)(-i + (HEIGHT/2)))/(HEIGHT/2);
         for (int j = 0; j < WIDTH; j++)
         {
-            screenPos.y = ((float)(j - SCALE))/SCALE;
+            screenPos.y = ((float)(j - (WIDTH/2)))/(WIDTH/2);
             struct color c = {0,0,0};
             struct vector3 origin = camera;
             struct vector3 dir = {screenPos.x-camera.x, screenPos.y+camera.y, screenPos.z+camera.z};
@@ -111,7 +112,7 @@ void render(int frame)
             if (planeMindex >= 0)
             {
                 d = dotpv3(subv3(planeIntersections[planeMindex].pos, origin), dir);
-                d = d*d/BRIGHTNESS;
+                d /= BRIGHTNESS;
                 c = planeColorAt(planes[planeMindex], planeIntersections[planeMindex].pos);
                 c = dimColorPercent(c, d);
                 planeMindex = -1;
