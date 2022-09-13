@@ -5,6 +5,7 @@
 #include "stb_image.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 
 struct planeTexture
 {
@@ -21,6 +22,14 @@ struct plane
     struct planeTexture texture;
 };
 
+struct sphere
+{
+    float scale;
+    struct vector3 center;
+    float radius;
+    struct color color;
+};
+
 struct intersection
 {
     struct vector3 pos;
@@ -35,6 +44,12 @@ struct intersection planeIntersection(struct plane p, struct vector3 rayOrigin, 
 
 // return the color at position pos in the plane
 struct color planeColorAt(struct plane p, struct vector3 pos);
+
+// return the intersection between a sphere and a ray
+struct intersection sphereIntersection(struct sphere s, struct vector3 rayOrigin, struct vector3 rayDirection);
+
+// return the color at position pos on the sphere
+struct color sphereColorAt(struct sphere s, struct vector3 pos);
 
 // get a pixel from the plane texture
 struct color getPixelFromTexture(struct planeTexture t, int x, int y, int aa);
@@ -98,6 +113,29 @@ struct color planeColorAt(struct plane p, struct vector3 pos)
     return c;
 }
 
+struct intersection sphereIntersection(struct sphere s, struct vector3 rayOrigin, struct vector3 rayDirection)
+{
+    struct intersection i = {{0,0,0}, -1};
+    float a = absv3(rayDirection);
+    a = a*a;
+    float b = 2*dotpv3(rayDirection, subv3(rayOrigin, s.center));
+    float c = absv3(subv3(s.center, rayOrigin));
+    c = c*c - s.radius*s.radius;
+
+    float discriminant = b*b - 4*a*c;
+    if (discriminant >= 0)
+    {
+        i.t = min(-b - sqrtf(discriminant), -b + sqrtf(discriminant))/(2*a);
+        i.pos = scalarpv3(rayDirection, i.t);
+    }
+    return i;
+}
+
+struct color sphereColorAt(struct sphere s, struct vector3 pos)
+{
+    return s.color;
+}
+
 struct color getPixelFromTexture(struct planeTexture t, int x, int y, int aa)
 {
     int colors = 0;
@@ -124,4 +162,9 @@ struct color getPixelFromTexture(struct planeTexture t, int x, int y, int aa)
 bool isValidTexture(struct planeTexture t)
 {
     return t.data != 0;
+}
+
+float minf(float a, float b)
+{
+    return (a < b) ? a : b;
 }

@@ -5,9 +5,9 @@ struct vector3
     float x, y, z;
 };
 
-static const struct vector3 iHat = {1,0,0};
-static const struct vector3 jHat = {0,1,0};
-static const struct vector3 kHat = {0,0,1};
+static const struct vector3 I_HAT = {1,0,0};
+static const struct vector3 J_HAT = {0,1,0};
+static const struct vector3 K_HAT = {0,0,1};
 
 // x = length of vector v
 float absv3(struct vector3 v);
