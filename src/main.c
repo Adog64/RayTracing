@@ -9,7 +9,7 @@
 #define SCALE 300
 #define WIDTH 640
 #define HEIGHT 480
-#define BRIGHTNESS 30
+#define BRIGHTNESS 5
 #define FPS 60
 
 #define PI M_PI
@@ -31,6 +31,8 @@ int main()
     bool running = true;
 
     int frame = 0;
+
+
     while (running)
     {
         while(SDL_PollEvent(&e))
@@ -38,12 +40,11 @@ int main()
             if (e.type == SDL_QUIT)
                 running = false;
         }
-        
+
         clearScreen();
-        render(frame);
+        render(frame);  
 
         SDL_RenderPresent(renderer);
-
         frame++;
         // SDL_Delay(1/FPS);
     }
@@ -66,7 +67,7 @@ void clearScreen()
 
 void render(int frame)
 {
-    int numPlanes = 6;
+    int numPlanes = 0;
     struct plane planes[] = {
         {SCALE, I_HAT, {10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, I_HAT, {-10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
@@ -76,7 +77,7 @@ void render(int frame)
         {SCALE, K_HAT, {0,0,-3}, PI/4, planeTextureFromFile("assets/floor.jpg")}
     };
 
-    int numSpheres = 2;
+    int numSpheres = 1;
     struct sphere spheres[] = {
         {SCALE, {7, 0, 0}, 2, {255, 20, 20}},
         {SCALE, {7, 2, 0}, 1, {20, 255, 20}}
@@ -127,7 +128,7 @@ void render(int frame)
                     sphereMindex = s;
             }
 
-            
+            //get the shortest distance and the color of the closest object            
             if (planeMindex >= 0 && sphereMindex >= 0)
             {
                 d0 = dotpv3(subv3(planeIntersections[planeMindex].pos, origin), dir);
@@ -149,15 +150,16 @@ void render(int frame)
             {
                 d0 = dotpv3(subv3(sphereIntersections[sphereMindex].pos, origin), dir);   
                 c = sphereColorAt(spheres[sphereMindex], sphereIntersections[sphereMindex].pos);
+                printf("Dist & color: %f ", d0);
+                printcolor(c);
             }
             else 
             {
                 planeMindex = -1;
                 sphereMindex = -1;
-                return;
+                continue;
             }
-
-            d0 *= d0/BRIGHTNESS;
+            d0 /= BRIGHTNESS;
             c = dimColorPercent(c, d0);
             planeMindex = -1;
             sphereMindex = -1;
