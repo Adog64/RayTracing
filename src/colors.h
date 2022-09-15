@@ -16,12 +16,22 @@ int min(int x, int y)
     return (x < y) ? x : y;
 }
 
+int max(int x, int y)
+{
+    return (x > y) ? x : y; 
+}
+
+// int roundf(float x)
+// {
+//     return (x-(int)x < 0.5) ? (int)x : (int)x+1;
+// }
+
 struct drawableColor makeDrawable(struct color c)
 {
     struct drawableColor dc;
-    dc.r = min(255, (unsigned int)c.r);
-    dc.g = min(255, (unsigned int)c.g);
-    dc.b = min(255, (unsigned int)c.b);
+    dc.r = max(min(255, (int)roundf(c.r)), 0);
+    dc.g = max(min(255, (int)roundf(c.g)), 0);
+    dc.b = max(min(255, (int)roundf(c.b)), 0);
     return dc;
 }
 
@@ -29,6 +39,13 @@ struct color dimColorPercent(struct color c, float d)
 {
     struct color dimmedColor = {c.r/d, c.g/d, c.b/d};
     return dimmedColor;
+}
+
+struct color brightenColorPercent(struct color c, float d)
+{
+    d++;
+    struct color brightenedColor = {c.r*d, c.g*d, c.b*d};
+    return brightenedColor;
 }
 
 void printcolor(struct color c)

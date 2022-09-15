@@ -9,7 +9,7 @@
 #define SCALE 300
 #define WIDTH 640
 #define HEIGHT 480
-#define BRIGHTNESS 5
+#define BRIGHTNESS 1
 #define FPS 60
 
 #define PI M_PI
@@ -31,7 +31,6 @@ int main()
     bool running = true;
 
     int frame = 0;
-
 
     while (running)
     {
@@ -67,20 +66,29 @@ void clearScreen()
 
 void render(int frame)
 {
-    int numPlanes = 0;
+    int numPlanes = 6;
     struct plane planes[] = {
+        {SCALE, K_HAT, {0,0,7}, PI/4, planeTextureFromFile("assets/ceiling.jpg")},
         {SCALE, I_HAT, {10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, I_HAT, {-10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, J_HAT, {0,10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, J_HAT, {0,-10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
-        {SCALE, K_HAT, {0,0,5}, PI/4, planeTextureFromFile("assets/ceiling.jpg")},
         {SCALE, K_HAT, {0,0,-3}, PI/4, planeTextureFromFile("assets/floor.jpg")}
     };
 
-    int numSpheres = 1;
+    int numSpheres = 2;
     struct sphere spheres[] = {
-        {SCALE, {7, 0, 0}, 2, {255, 20, 20}},
-        {SCALE, {7, 2, 0}, 1, {20, 255, 20}}
+        {SCALE, {5, 0, -2}, 1, {255, 20, 20}},
+        {SCALE, {7, 2, -2}, 1, {20, 255, 20}}
+    };
+
+    int numLightSources = 5;
+    struct lightSource lightSources[] = {
+        {{0.3,0.3,4.5}, 7},
+        {{0.3,-0.3,4.5}, 7},
+        {{0,0.3,4.5}, 7},
+        {{0.15,0,4.5}, 7},
+        {{0,-0.3,4.5}, 7}
     };
 
     struct vector3 camera = {0, 0, 0};
@@ -88,81 +96,95 @@ void render(int frame)
 
     float roll = 0;
     float pitch = 0;
-    float yaw = frame*(PI/256);
+    float yaw = 0*(PI/256);
 
-    struct intersection planeIntersections[numPlanes];
-    int planeMindex = -1;
+    struct intersection intersections[numSpheres + numPlanes];
+    int mindex = -1;
+    struct intersection mintersection;
+    struct vector3 minormal;
+    struct vector3 light_dir;
 
-    struct intersection sphereIntersections[numSpheres];
-    int sphereMindex = -1;
+    float d, b, t;
+    bool shadow = false;
 
-    float d0, d1;
 
     for (int i = 0; i < HEIGHT; i++)
     {
         screenPos.z = ((float)(-i + (HEIGHT/2)))/(HEIGHT/2);
         for (int j = 0; j < WIDTH; j++)
         {
+
             screenPos.y = ((float)(j - (WIDTH/2)))/(WIDTH/2);
             struct color c = {0,0,0};
             struct vector3 origin = camera;
             struct vector3 dir = {screenPos.x-camera.x, screenPos.y+camera.y, screenPos.z+camera.z};
 
+            // adjust camera rotation
             dir = rotatev3(I_HAT, dir, roll);
             dir = rotatev3(J_HAT, dir, pitch);
             dir = rotatev3(K_HAT, dir, yaw);
 
+            // ====== GLOBAL ILLUMINATION ======
+            mindex = -1;
+
             // find shortest intersection between ray and plane
             for (int p = 0; p < numPlanes; p++)
             {
-                planeIntersections[p] = planeIntersection(planes[p], camera, dir);
-                if (planeIntersections[p].t > 0 && (planeMindex == -1 || planeIntersections[p].t < planeIntersections[planeMindex].t))
-                    planeMindex = p;
+                intersections[p] = planeIntersection(planes[p], camera, dir);
+                if (intersections[p].t > 0 && (mindex == -1 || intersections[p].t < intersections[mindex].t))
+                {
+                    mindex = p;
+                    minormal = planeNormalAt(planes[p], intersections[mindex].pos);
+                }
             }
 
             // find shortest intersection between ray and sphere
             for (int s = 0; s < numSpheres; s++)
             {
-                sphereIntersections[s] = sphereIntersection(spheres[s], camera, dir);
-                if (sphereIntersections[s].t > 0 && (sphereMindex == -1 || sphereIntersections[s].t < sphereIntersections[sphereMindex].t))
-                    sphereMindex = s;
+                intersections[numPlanes + s] = sphereIntersection(spheres[s], camera, dir);
+                if (intersections[numPlanes + s].t > 0 && (mindex == -1 || intersections[numPlanes + s].t < intersections[mindex].t))
+                    {
+                        mindex = numPlanes + s;
+                        minormal = sphereNormalAt(spheres[s], intersections[mindex].pos);
+                    }
+            }
+            
+            // no intersection with scene
+            if (mindex == -1)
+                continue;
+            
+            mintersection = intersections[mindex];
+            d = absv3(subv3(mintersection.pos, origin));
+            d /= BRIGHTNESS;
+            if (mindex >= numPlanes)
+                c = sphereColorAt(spheres[mindex-numPlanes], mintersection.pos);
+            else if (mindex >= 0)
+                c = planeColorAt(planes[mindex], mintersection.pos);
+            c = dimColorPercent(c, 10);
+
+            // ====== LOCAL ILLUMINATION ======
+            for (int l = 0; l < numLightSources; l++)
+            {
+                light_dir = subv3(lightSources[l].pos, mintersection.pos);
+                shadow = false;
+                for (int p = 0; p < numPlanes && !shadow; p++)
+                {
+                    t = planeIntersection(planes[p], mintersection.pos, light_dir).t;
+                    shadow = t > 0.000001 && t < 1;    // object in shadow if the ray between the point and the light source is blocked
+                }
+                for (int s = 0; s < numSpheres && !shadow; s++)
+                {
+                    t = sphereIntersection(spheres[s], mintersection.pos, light_dir).t;
+                    shadow = t > 0.000001 && t < 1;
+                }
+                if (!shadow)
+                {
+                    d = absv3(light_dir);
+                    // brighten color based on inverse square law and difference in direction between ray and surface normal
+                    c = brightenColorPercent(c, fabs(dotpv3(light_dir, minormal))*lightSources[l].luminosity/(d*d));
+                }
             }
 
-            //get the shortest distance and the color of the closest object            
-            if (planeMindex >= 0 && sphereMindex >= 0)
-            {
-                d0 = dotpv3(subv3(planeIntersections[planeMindex].pos, origin), dir);
-                d1 = dotpv3(subv3(sphereIntersections[sphereMindex].pos, origin), dir);
-                if (d1 < d0)
-                {
-                    d0 = d1;
-                    c = sphereColorAt(spheres[sphereMindex], sphereIntersections[sphereMindex].pos);
-                }
-                else
-                    c = planeColorAt(planes[planeMindex], planeIntersections[planeMindex].pos);
-            }
-            else if (planeMindex >= 0)
-            {
-                d0 = dotpv3(subv3(planeIntersections[planeMindex].pos, origin), dir);
-                c = planeColorAt(planes[planeMindex], planeIntersections[planeMindex].pos);
-            }
-            else if (sphereMindex >= 0)
-            {
-                d0 = dotpv3(subv3(sphereIntersections[sphereMindex].pos, origin), dir);   
-                c = sphereColorAt(spheres[sphereMindex], sphereIntersections[sphereMindex].pos);
-                printf("Dist & color: %f ", d0);
-                printcolor(c);
-            }
-            else 
-            {
-                planeMindex = -1;
-                sphereMindex = -1;
-                continue;
-            }
-            d0 /= BRIGHTNESS;
-            c = dimColorPercent(c, d0);
-            planeMindex = -1;
-            sphereMindex = -1;
             putPixel(j, i, c);
         }
     }

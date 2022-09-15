@@ -7,6 +7,9 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
+                "-lm",
+                "-lSDL2",
+                "-ldl",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"

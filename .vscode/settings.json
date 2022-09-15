@@ -1,6 +1,11 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "stb_image.h": "c"
+        "stb_image.h": "c",
+        "scene_objs.h": "c",
+        "colors.h": "c",
+        "sdl.h": "c",
+        "stdbool.h": "c",
+        "math.h": "c"
     }
 }

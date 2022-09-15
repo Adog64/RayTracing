@@ -30,6 +30,12 @@ struct sphere
     struct color color;
 };
 
+struct lightSource
+{
+    struct vector3 pos;
+    float luminosity;
+};
+
 struct intersection
 {
     struct vector3 pos;
@@ -45,11 +51,17 @@ struct intersection planeIntersection(struct plane p, struct vector3 rayOrigin, 
 // return the color at position pos in the plane
 struct color planeColorAt(struct plane p, struct vector3 pos);
 
+// return the normal of the plane at point pos
+struct vector3 planeNormalAt(struct plane p, struct vector3 pos);
+
 // return the intersection between a sphere and a ray
 struct intersection sphereIntersection(struct sphere s, struct vector3 rayOrigin, struct vector3 rayDirection);
 
 // return the color at position pos on the sphere
 struct color sphereColorAt(struct sphere s, struct vector3 pos);
+
+// return the normal of the sphere at point pos
+struct vector3 sphereNormalAt(struct sphere s, struct vector3 pos);
 
 // get a pixel from the plane texture
 struct color getPixelFromTexture(struct planeTexture t, int x, int y, int aa);
@@ -113,6 +125,11 @@ struct color planeColorAt(struct plane p, struct vector3 pos)
     return c;
 }
 
+struct vector3 planeNormalAt(struct plane p, struct vector3 pos)
+{
+    return p.normal;
+}
+
 struct intersection sphereIntersection(struct sphere s, struct vector3 rayOrigin, struct vector3 rayDirection)
 {
     struct intersection i = {{0,0,0}, -1};
@@ -129,6 +146,11 @@ struct intersection sphereIntersection(struct sphere s, struct vector3 rayOrigin
         i.pos = scalarpv3(rayDirection, i.t);
     }
     return i;
+}
+
+struct vector3 sphereNormalAt(struct sphere s, struct vector3 pos)
+{
+    return normv3(subv3(pos, s.center));
 }
 
 struct color sphereColorAt(struct sphere s, struct vector3 pos)
