@@ -11,7 +11,7 @@ SRC_DIR = src
 BUILD_DIR = bin
 
 # add more CompilerFLAGS as your project requires
-CFLAGS = -Wall -Wextra -O3
+CFLAGS = -Wall -Wextra -O0
 
 # add libraries for your project here
 LDFLAGS = 

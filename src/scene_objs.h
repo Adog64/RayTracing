@@ -142,7 +142,8 @@ struct intersection sphereIntersection(struct sphere s, struct vector3 rayOrigin
     float discriminant = b*b - 4*a*c;
     if (discriminant >= 0)
     {
-        i.t = min(-b - sqrtf(discriminant), -b + sqrtf(discriminant))/(2*a);
+        float i1 = -b - sqrtf(discriminant), i2 = -b + sqrtf(discriminant);
+        i.t = ((i1 < i2) ? i1 : i2)/(2*a);
         i.pos = scalarpv3(rayDirection, i.t);
     }
     return i;
@@ -184,9 +185,4 @@ struct color getPixelFromTexture(struct planeTexture t, int x, int y, int aa)
 bool isValidTexture(struct planeTexture t)
 {
     return t.data != 0;
-}
-
-float minf(float a, float b)
-{
-    return (a < b) ? a : b;
 }

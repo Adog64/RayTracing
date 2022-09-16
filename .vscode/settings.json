@@ -7,5 +7,12 @@
         "sdl.h": "c",
         "stdbool.h": "c",
         "math.h": "c"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/sharpe/Documents/projects/c-projects/RayTracing",
+            "binaryPath": "/home/sharpe/Documents/projects/c-projects/RayTracing/RayTracing",
+            "binaryArgs": []
+        }
+    ]
 }

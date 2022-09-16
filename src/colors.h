@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include <stdlib.h>
 
 struct color
 {
@@ -21,17 +22,12 @@ int max(int x, int y)
     return (x > y) ? x : y; 
 }
 
-// int roundf(float x)
-// {
-//     return (x-(int)x < 0.5) ? (int)x : (int)x+1;
-// }
-
 struct drawableColor makeDrawable(struct color c)
 {
     struct drawableColor dc;
-    dc.r = max(min(255, (int)roundf(c.r)), 0);
-    dc.g = max(min(255, (int)roundf(c.g)), 0);
-    dc.b = max(min(255, (int)roundf(c.b)), 0);
+    dc.r = max(min(255, (c.r - (int)c.r < (float)rand()/((float)RAND_MAX)) ? (int)c.r : (int)c.r + 1), 0);
+    dc.g = max(min(255, (c.g - (int)c.g < (float)rand()/((float)RAND_MAX)) ? (int)c.g : (int)c.g + 1), 0);
+    dc.b = max(min(255, (c.b - (int)c.b < (float)rand()/((float)RAND_MAX)) ? (int)c.b : (int)c.b + 1), 0);
     return dc;
 }
 

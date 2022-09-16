@@ -68,7 +68,7 @@ void render(int frame)
 {
     int numPlanes = 6;
     struct plane planes[] = {
-        {SCALE, K_HAT, {0,0,7}, PI/4, planeTextureFromFile("assets/ceiling.jpg")},
+        {SCALE, K_HAT, {0,0,6}, PI/4, planeTextureFromFile("assets/ceiling.jpg")},
         {SCALE, I_HAT, {10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, I_HAT, {-10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, J_HAT, {0,10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
@@ -76,19 +76,21 @@ void render(int frame)
         {SCALE, K_HAT, {0,0,-3}, PI/4, planeTextureFromFile("assets/floor.jpg")}
     };
 
-    int numSpheres = 2;
+    int numSpheres = 4;
     struct sphere spheres[] = {
         {SCALE, {5, 0, -2}, 1, {255, 20, 20}},
-        {SCALE, {7, 2, -2}, 1, {20, 255, 20}}
+        {SCALE, {7, 2, -2}, 1, {20, 255, 20}},
+        {{SCALE}, {3, -2, -2}, 1, {20, 20, 255}},
+        {{SCALE}, {5, 3, -2.8}, 0.2, {200, 40, 200}}
     };
 
     int numLightSources = 5;
     struct lightSource lightSources[] = {
-        {{0.3,0.3,4.5}, 7},
-        {{0.3,-0.3,4.5}, 7},
-        {{0,0.3,4.5}, 7},
-        {{0.15,0,4.5}, 7},
-        {{0,-0.3,4.5}, 7}
+        {{2.3,0.3,4.5}, 7},
+        {{2.3,-0.3,4.5}, 7},
+        {{2,0.3,4.5}, 7},
+        {{2.15,0,4.5}, 7},
+        {{2,-0.3,4.5}, 7}
     };
 
     struct vector3 camera = {0, 0, 0};
@@ -96,7 +98,7 @@ void render(int frame)
 
     float roll = 0;
     float pitch = 0;
-    float yaw = 0*(PI/256);
+    float yaw = 0;
 
     struct intersection intersections[numSpheres + numPlanes];
     int mindex = -1;
@@ -104,7 +106,7 @@ void render(int frame)
     struct vector3 minormal;
     struct vector3 light_dir;
 
-    float d, b, t;
+    float d, t;
     bool shadow = false;
 
 
@@ -160,7 +162,7 @@ void render(int frame)
                 c = sphereColorAt(spheres[mindex-numPlanes], mintersection.pos);
             else if (mindex >= 0)
                 c = planeColorAt(planes[mindex], mintersection.pos);
-            c = dimColorPercent(c, 10);
+            c = dimColorPercent(c, 40);
 
             // ====== LOCAL ILLUMINATION ======
             for (int l = 0; l < numLightSources; l++)
