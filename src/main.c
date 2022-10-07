@@ -1,6 +1,4 @@
-#include "vector3.h"
-#include "scene_objs.h"
-#include "colors.h"
+#include "art_3d.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <math.h>
@@ -9,19 +7,39 @@
 #define SCALE 300
 #define WIDTH 640
 #define HEIGHT 480
-#define BRIGHTNESS 1
+#define BRIGHTNESS 6
 #define FPS 60
 
 #define PI M_PI
+
+#define DEBUG false
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
 void clearScreen();
-void putPixel(int, int, struct color);
+void putPixel(int, int, ART_AnalogColor);
 void render(int);
+void raytrace();
+void debug();
 
 int main()
+{
+    if (DEBUG)
+        debug();
+    else
+        raytrace();
+    return 0;
+}
+
+void debug()
+{
+    ART_AnalogColor c = hslToAnalog(183, 4, 63);
+    // printDC(makeDrawable(c));
+    printAC(c);
+}
+
+void raytrace()
 {
     window = SDL_CreateWindow("Ray Tracing", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
     renderer = SDL_CreateRenderer(window, -1, 0);
@@ -47,10 +65,10 @@ int main()
         frame++;
         // SDL_Delay(1/FPS);
     }
-    return 0;
 }
 
-void putPixel(int x, int y, struct color c)
+
+void putPixel(int x, int y, ART_AnalogColor c)
 {
     struct drawableColor dc = makeDrawable(c);
     unsigned int r = dc.r, g = dc.g, b = dc.b;
@@ -67,46 +85,62 @@ void clearScreen()
 void render(int frame)
 {
     int numPlanes = 6;
-    struct plane planes[] = {
-        {SCALE, K_HAT, {0,0,6}, PI/4, planeTextureFromFile("assets/ceiling.jpg")},
-        {SCALE, I_HAT, {10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
+    ART_Plane planes[] = {
+        {SCALE, scalarpv3(K_HAT,-1), {0,0,6}, PI/4, planeTextureFromFile("assets/ceiling.jpg")},
+        {SCALE, scalarpv3(I_HAT, -1), {10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, I_HAT, {-10,0,0}, 0, planeTextureFromFile("assets/wall.jpg")},
-        {SCALE, J_HAT, {0,10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
+        {SCALE, scalarpv3(J_HAT, -1), {0,10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, J_HAT, {0,-10,0}, 0, planeTextureFromFile("assets/wall.jpg")},
         {SCALE, K_HAT, {0,0,-3}, PI/4, planeTextureFromFile("assets/floor.jpg")}
     };
 
-    int numSpheres = 4;
-    struct sphere spheres[] = {
-        {SCALE, {5, 0, -2}, 1, {255, 20, 20}},
-        {SCALE, {7, 2, -2}, 1, {20, 255, 20}},
-        {{SCALE}, {3, -2, -2}, 1, {20, 20, 255}},
-        {{SCALE}, {5, 3, -2.8}, 0.2, {200, 40, 200}}
+    int numSpheres = 3;
+    ART_Sphere spheres[] = {
+        {SCALE, {5, 0, -2}, 1, {1, 0.1, 0.1}},
+        {SCALE, {7, 2, -2}, 1, {0.1, 1, 0.1}},
+        {{SCALE}, {3, -2, -2}, 1, {0.1, 0.1, 1}},
+        {{SCALE}, {5, 3, -2.8}, 0.2, {0.8, 0.2, 0.8}}
+    };
+
+    int numTris = 6;
+    ART_Tri tris[] = {
+        // front
+        triFromVerticies(SCALE, vector3(4, -4, -1), vector3(4, -2, -1), vector3(4, -2, -3), true, art_analogColor(0.5, 0.1, 0.5)),
+        triFromVerticies(SCALE, vector3(4, -4, -1), vector3(4, -4, -3), vector3(4, -2, -3), false, art_analogColor(0.5, 0.1, 0.5)),
+        // right
+        triFromVerticies(SCALE, vector3(4, -2, -1), vector3(6, -2, -1), vector3(6, -2, -3), true, art_analogColor(0.5, 0.1, 0.5)),
+        triFromVerticies(SCALE, vector3(4, -2, -1), vector3(4, -2, -3), vector3(6, -2, -3), false, art_analogColor(0.5, 0.1, 0.5)),
+        // top
+        triFromVerticies(SCALE, vector3(4, -4, -1), vector3(4, -2, -1), vector3(6, -2, -1), false, art_analogColor(0.5, 0.1, 0.5)),
+        triFromVerticies(SCALE, vector3(4, -4, -1), vector3(6, -4, -1), vector3(6, -2, -1), true, art_analogColor(0.5, 0.1, 0.5)),
     };
 
     int numLightSources = 5;
-    struct lightSource lightSources[] = {
-        {{2.3,0.3,4.5}, 7},
-        {{2.3,-0.3,4.5}, 7},
-        {{2,0.3,4.5}, 7},
-        {{2.15,0,4.5}, 7},
-        {{2,-0.3,4.5}, 7}
+    float ls1b = 2;
+    int lh = 0, ll = 100;
+    ART_LightSource lightSources[] = {
+        art_lightSource(vector3(2.3, 0.3, 4.5), ls1b, lh, ll),
+        art_lightSource(vector3(2.3, -0.3, 4.5), ls1b, lh, ll),
+        art_lightSource(vector3(2,0.3,4.5), ls1b, lh, ll),
+        art_lightSource(vector3(2.15,0,4.5), ls1b, lh, ll),
+        art_lightSource(vector3(2,-0.3,4.5), ls1b, lh, ll),
+        art_lightSource(vector3(9.8,3,0), 0.1, 180, 50),
     };
 
-    struct vector3 camera = {0, 0, 0};
-    struct vector3 screenPos = {camera.x+1, 0, 0};
+    ART_Vector3 camera = {0, 0, 0};
+    ART_Vector3 screenPos = {camera.x+0.7, 0, 0};
 
     float roll = 0;
     float pitch = 0;
-    float yaw = 0;
+    float yaw = frame*PI/512;
 
-    struct intersection intersections[numSpheres + numPlanes];
+    ART_Intersection intersections[numSpheres + numPlanes + numTris];
     int mindex = -1;
-    struct intersection mintersection;
-    struct vector3 minormal;
-    struct vector3 light_dir;
+    ART_Intersection mintersection;
+    ART_Vector3 minormal;
+    ART_Vector3 light_dir;
 
-    float d, t;
+    float d, b, lt;
     bool shadow = false;
 
 
@@ -117,9 +151,9 @@ void render(int frame)
         {
 
             screenPos.y = ((float)(j - (WIDTH/2)))/(WIDTH/2);
-            struct color c = {0,0,0};
-            struct vector3 origin = camera;
-            struct vector3 dir = {screenPos.x-camera.x, screenPos.y+camera.y, screenPos.z+camera.z};
+            ART_AnalogColor c = {0,0,0};
+            ART_Vector3 origin = camera;
+            ART_Vector3 dir = {screenPos.x-camera.x, screenPos.y+camera.y, screenPos.z+camera.z};
 
             // adjust camera rotation
             dir = rotatev3(I_HAT, dir, roll);
@@ -150,6 +184,17 @@ void render(int frame)
                         minormal = sphereNormalAt(spheres[s], intersections[mindex].pos);
                     }
             }
+
+            // find shortest intersection between ray and tri
+            for (int t = 0; t < numTris; t++)
+            {
+                intersections[numPlanes+numSpheres+t] = triIntersection(tris[t], camera, dir);
+                if (intersections[numPlanes+numSpheres+t].t > 0 && (mindex == -1 || intersections[numPlanes+numSpheres+t].t < intersections[mindex].t))
+                {
+                    mindex = numPlanes + numSpheres + t;
+                    minormal = triNormalAt(tris[t], intersections[mindex].pos);
+                }
+            }
             
             // no intersection with scene
             if (mindex == -1)
@@ -158,11 +203,13 @@ void render(int frame)
             mintersection = intersections[mindex];
             d = absv3(subv3(mintersection.pos, origin));
             d /= BRIGHTNESS;
-            if (mindex >= numPlanes)
+            if (mindex >= numPlanes+numSpheres)
+                c = triColorAt(tris[mindex-(numPlanes+numSpheres)], mintersection.pos);
+            else if (mindex >= numPlanes)
                 c = sphereColorAt(spheres[mindex-numPlanes], mintersection.pos);
             else if (mindex >= 0)
                 c = planeColorAt(planes[mindex], mintersection.pos);
-            c = dimColorPercent(c, 40);
+            c = scaleBrightness(c, BRIGHTNESS*0.05);
 
             // ====== LOCAL ILLUMINATION ======
             for (int l = 0; l < numLightSources; l++)
@@ -171,19 +218,26 @@ void render(int frame)
                 shadow = false;
                 for (int p = 0; p < numPlanes && !shadow; p++)
                 {
-                    t = planeIntersection(planes[p], mintersection.pos, light_dir).t;
-                    shadow = t > 0.000001 && t < 1;    // object in shadow if the ray between the point and the light source is blocked
+                    lt = planeIntersection(planes[p], mintersection.pos, light_dir).t;
+                    shadow = lt > 0.000001 && lt < 1;    // object in shadow if the ray between the point and the light source is blocked
                 }
                 for (int s = 0; s < numSpheres && !shadow; s++)
                 {
-                    t = sphereIntersection(spheres[s], mintersection.pos, light_dir).t;
-                    shadow = t > 0.000001 && t < 1;
+                    lt = sphereIntersection(spheres[s], mintersection.pos, light_dir).t;
+                    shadow = lt > 0.000001 && lt < 1;
+                }
+                for (int t = 0; t < numTris && !shadow; t++)
+                {
+                    lt = triIntersection(tris[t], mintersection.pos, light_dir).t;
+                    shadow = lt > 0.000001 && lt < 1;
                 }
                 if (!shadow)
                 {
                     d = absv3(light_dir);
                     // brighten color based on inverse square law and difference in direction between ray and surface normal
-                    c = brightenColorPercent(c, fabs(dotpv3(light_dir, minormal))*lightSources[l].luminosity/(d*d));
+                    b = dotpv3(light_dir, minormal);
+                    //c = sourceTint(c, lightSources[l], d);
+                    c = scaleBrightness(c, 1+b*lightSources[l].luminosity/(d*d));
                 }
             }
 
