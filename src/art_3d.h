@@ -94,6 +94,15 @@
 // ║ max                ║ returns the greater of two ints    ║ int, int                                ║
 // ╚════════════════════╩════════════════════════════════════╩═════════════════════════════════════════╝
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
+// ║                             *** Section 5: .art File Functions ***                                ║
+// ╠════════════════════╦════════════════════════════════════╦═════════════════════════════════════════╣
+// ║ Function           ║             Description            ║              Parameter List             ║
+// ╠════════════════════╬════════════════════════════════════╬═════════════════════════════════════════╣
+// ║ loadArt            ║ load and parse a .art file         ║ const char*                             
+// ╟────────────────────╫────────────────────────────────────╫─────────────────────────────────────────╢
+// ║ ║ ║ ║
+// ╚════════════════════╩════════════════════════════════════╩═════════════════════════════════════════╝
+// ╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                               *** Section N: XXXXX Functions ***                                  ║
 // ╠════════════════════╦════════════════════════════════════╦═════════════════════════════════════════╣
 // ║ Function           ║             Description            ║              Parameter List             ║
@@ -157,6 +166,7 @@ typedef struct art_sphere
     float radius;
     ART_AnalogColor color;
 }ART_Sphere;
+
 
 /// @brief 3D Triangle defined by 3 verticies. IMPORTANT: To avoid surface problems, please ONLY initialize with constructor function.
 typedef struct art_tri
@@ -403,6 +413,12 @@ int min(int a, int b);
 int max(int a, int b);
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
+// ║                             *** Section 5: .art File Functions ***                                ║
+// ╚═══════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+
+// ╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                              ** FOR NERDS: Function Definitions **                                ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════════╝
 
@@ -499,10 +515,10 @@ ART_AnalogColor sourceTint(ART_AnalogColor c, ART_LightSource l, float d)
 {
     ART_AnalogColor c1 = hslToAnalog(l.hue, 100, l.lightness);
     float b0 = sqrtf(c.r*c.r + c.g*c.g + c.b*c.b);
-    c.r = c.r + c.r*c1.r;
-    c.g = c.g + c.g*c1.g;
-    c.b = c.b + c.b*c1.b;
-    b0 /= sqrtf(c.r*c.r + c.g*c.g + c.b*c.b) * d*d;
+    c.r = c.r + (c.r+0.01)*c1.r;
+    c.g = c.g + (c.g+0.01)*c1.g;
+    c.b = c.b + (c.b+0.01)*c1.b;
+    b0 /= sqrtf(c.r*c.r + c.g*c.g + c.b*c.b);
     c.r *= b0;
     c.g *= b0;
     c.b *= b0;
@@ -569,7 +585,7 @@ ART_AnalogColor hslToAnalog(int hue, int saturation, int lightness)
         c.b = (c.b - l)*s + l;
     }
     return c;
-}
+} 
 
 
 ART_Texture planeTextureFromFile(char *path)

@@ -117,7 +117,7 @@ void render(int frame)
 
     int numLightSources = 5;
     float ls1b = 2;
-    int lh = 0, ll = 100;
+    int lh = 20, ll = 90;
     ART_LightSource lightSources[] = {
         art_lightSource(vector3(2.3, 0.3, 4.5), ls1b, lh, ll),
         art_lightSource(vector3(2.3, -0.3, 4.5), ls1b, lh, ll),
@@ -236,8 +236,8 @@ void render(int frame)
                     d = absv3(light_dir);
                     // brighten color based on inverse square law and difference in direction between ray and surface normal
                     b = dotpv3(light_dir, minormal);
-                    //c = sourceTint(c, lightSources[l], d);
                     c = scaleBrightness(c, 1+b*lightSources[l].luminosity/(d*d));
+                    c = sourceTint(c, lightSources[l], d);
                 }
             }
 

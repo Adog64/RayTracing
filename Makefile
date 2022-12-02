@@ -1,5 +1,5 @@
 # the name of your executable
-TARGET = RayTracing.out
+TARGET = Shaper.out
 
 # launches your target in terminal
 RUN = ./$(TARGET)
